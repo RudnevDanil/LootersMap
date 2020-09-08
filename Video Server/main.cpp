@@ -11,9 +11,9 @@ using namespace cv;
 using namespace std;
 
 string log_directory = "./log/";
-map <string, string> settings;
+map <string, map<string,string>> settings;
 
-// Êîíòðîëèðóåò ÷òîáû äåñêðèòîðû íå ïåðåñåêàëèñü.
+// Descriptor class. Use it for give diferent descriptors for each stream.
 class individual_descriptor
 {
 private:
@@ -31,7 +31,7 @@ public:
     }
 };
 
-// Îáîáùåíèå èíôîðìàöèè ïî ïîòîêó âèäåîçàõâàòà. Õðàíèò âñåâîçìîæíîûå íàñòðîéêè, êàñàþùèåñÿ êàæäîãî ïîòîêà.
+// Stream info class. Filled by full information about stream.
 class stream_info
 {
 public:
@@ -57,15 +57,30 @@ public:
         this->is_show_on_screen = is_show_on_screen;
         this->frames_in_one_avi_file = frames_in_one_avi_file;
     }
+
+    void log_stream_settings(string full_file_path)
+    {
+        ofstream fout(full_file_path, ios_base::app);
+        fout << "path_to_cam = " << path_to_cam << endl;
+        fout << "fps = " << fps << endl;
+        fout << "path_to_saving_video = " << path_to_saving_video << endl;
+        fout << "path_to_saving_imgs = " << path_to_saving_imgs << endl;
+        fout << "skip_frames_saving = " << skip_frames_saving << endl;
+        fout << "skip_frames_classify = " << skip_frames_classify << endl;
+        fout << "stream_descr = " << stream_descr << endl;
+        fout << "is_show_on_screen = " << is_show_on_screen << endl;
+        fout << "frames_in_one_avi_file = " << frames_in_one_avi_file << endl;
+        fout.close();
+    }
 };
 
-// Îáíîâëåíèå íàñòðîåê settings èç xml ôàéëà
+// Reading xml settings file. (!) need to add restarting streams.
 void update_settings(string path, bool is_print_map);
 
-// Çàõâàò âèäåî, îòäåëåíèå èçîáðàæåíèé(ðåàëèçîâàòü) è çàïðîñ êëàññèôèêàöèè(ðåàëèçîâàòü)
+// Capture stream and save imgs and videos.
 int capture_cam(stream_info *info);
 
-// Ëîãèðîâàíèå èíôîðìàöèè â ñîîòâåòñòâóþùåì ïîòîêó ôàéëå
+// log message to a log file and maybe to console
 void log(string full_file_path, string message, bool is_cout = false);
 
 int main()
@@ -75,7 +90,7 @@ int main()
     system("rm -rf ./saved_imgs/*");
 
 
-    // ÷òåíèå ìàññèâà íàñòðîåê
+    // update settings
     cout << "update_settings" << endl;
     update_settings("./xml/settings.xml", true);
     cout << "update_settings DONE" << endl << endl;
@@ -87,7 +102,15 @@ int main()
     individual_descriptor descriptors;
 
     // make streams
-    stream_info *stream_1 = new stream_info("rtsp://admin:admin@192.168.144.200:554/snl/live/1/1", 25, 0, 50, path_to_saving_video, path_to_saving_imgs, descriptors.next(), true,10*25);
+    //stream_info *stream_1 = new stream_info("rtsp://admin:admin@192.168.144.200:554/snl/live/1/1", 25, 0, 50, path_to_saving_video, path_to_saving_imgs, descriptors.next(), true,10*25);
+    stream_info *stream_1 = new stream_info(
+                settings["stream_1"]["path_to_cam"],
+                stoi(settings["stream_1"]["fps"]),
+                stoi(settings["stream_1"]["skip_frames_saving"]),
+                stoi(settings["stream_1"]["skip_frames_classify"]),
+                path_to_saving_video, path_to_saving_imgs, descriptors.next(),
+                ((settings["stream_1"]["is_show_on_screen"] == "true")?true:false),
+                 stoi(settings["stream_1"]["frames_in_one_avi_file"]));
     //stream_info *stream_2 = new stream_info("rtsp://admin:admin@192.168.144.200:554/snl/live/1/1", 25, 25, 25, path_to_saving_video, path_to_saving_imgs, descriptors.next(), true,100);
     //stream_info *stream_3 = new stream_info("rtsp://admin:admin@192.168.144.200:554/snl/live/1/1", 25, 25, 25, path_to_saving_video, path_to_saving_imgs, descriptors.next(), true,100);
 
@@ -110,13 +133,25 @@ int main()
 
 void update_settings(string path, bool is_print_map)
 {
-    ifstream in(path); // îêðûâàåì xml ôàéë íàñòðîåê äëÿ ÷òåíèÿ
+    ifstream in(path);
     string line;
     bool saving = false;
+
     if (in.is_open())
     {
+        map<string,string> others;
+        /*others["o_test_k_1"] = "o_test_v_1";
+        others["o_test_k_2"] = "o_test_v_2";
+        others["o_test_k_3"] = "o_test_v_3";*/
+        map<string,string> cur_stream;
+        bool cur_stream_state = false;
+        string cur_stream_name = "";
+
         while (getline(in, line))
         {
+            if (line == "\r")
+                continue;
+
             if (line.find("<data>") != string::npos)
             {
                 cout << "start data \n";
@@ -138,17 +173,52 @@ void update_settings(string path, bool is_print_map)
                         int first_r_arrow = line.find_first_of(">");
                         int last_l_arrow = line.find("</");
 
-                        string key = line.substr(first_l_arrow + 1, first_r_arrow - first_l_arrow - 1);
-                        string value = line.substr(first_r_arrow + 1, last_l_arrow - first_r_arrow - 1);
-
-                        if (key != "")
-                            settings[key] = value;
+                        if(last_l_arrow == -1) // stream block start
+                        {
+                            if(!cur_stream_state) // block not opened
+                            {
+                                cur_stream_state = true;
+                                cur_stream_name = line.substr(first_l_arrow + 1, first_r_arrow - first_l_arrow - 1);
+                                cur_stream.clear();
+                            }
+                            else
+                            {
+                                cout << " -- ERROR parsing XML. settings block damaged. start block." << endl;
+                            }
+                        }
+                        else if(last_l_arrow == 1) // stream block end
+                        {
+                            if(cur_stream_state) // block already opened
+                            {
+                                cur_stream_state = false;
+                                settings[cur_stream_name] = cur_stream;
+                                cur_stream.clear();
+                            }
+                            else
+                            {
+                                cout << " -- ERROR parsing XML. settings block damaged. end block." << endl;
+                            }
+                        }
                         else
-                            cout << " -- ERROR parsing XML. key is empty." << endl;
+                        {
+                            string key = line.substr(first_l_arrow + 1, first_r_arrow - first_l_arrow - 1);
+                            string value = line.substr(first_r_arrow + 1, last_l_arrow - first_r_arrow - 1);
+
+                            if (key != "")
+                            {
+                                if(cur_stream_state) // record. stream block opened.
+                                    cur_stream[key] = value;
+                                else    // record. stream block not opened.
+                                    others[key] = value;
+                            }
+                            else
+                                cout << " -- ERROR parsing XML. key is empty." << endl;
+                        }
                     }
                 }
             }
         }
+        settings["others"] = others;
     }
     in.close();
     if (saving == true)
@@ -160,18 +230,18 @@ void update_settings(string path, bool is_print_map)
     {
         cout << "--- printing settings map ---" << endl;
         // printing settings map
-        for (auto elem : settings)
-        {
-            cout << elem.first << "___" << elem.second << "___" << endl;
-        }
+        for (auto elem1 : settings)
+            for (auto elem2 : elem1.second)
+                cout << elem1.first << "___" << elem2.first << "___" << elem2.second << endl;
     }
 }
 
 int capture_cam(stream_info *info)
 {
+    info->log_stream_settings(log_directory + "settings_" + to_string(info->stream_descr) + ".txt");
 
     string full_path_for_saving_video = info->path_to_saving_video + to_string(info->stream_descr) + ".avi";
-    string log_file_full_path = log_directory + to_string(info->stream_descr) + ".txt";
+    string log_file_full_path = log_directory + "log_"+ to_string(info->stream_descr) + ".txt";
     log(log_file_full_path, "This is " + full_path_for_saving_video + " from cam " + info->path_to_cam + "\n");
     log(log_file_full_path, "Try to connect camera ...\n", true);
 
