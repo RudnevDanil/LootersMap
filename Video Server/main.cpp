@@ -7,10 +7,16 @@
 #include <map>
 #include <ctime>
 
+#include <unistd.h>//linux sleep
+
 using namespace cv;
 using namespace std;
 
 string log_directory = "./log/";
+string xml_directory = "./xml/";
+string xml_settings = "settings.xml";
+string path_to_saving_video = "./saved_video/";
+string path_to_saving_imgs = "./saved_imgs/";
 map <string, map<string,string>> settings;
 
 // Descriptor class. Use it for give diferent descriptors for each stream.
@@ -85,47 +91,47 @@ void log(string full_file_path, string message, bool is_cout = false);
 
 int main()
 {
+
     // remove files from log and saved_imgs directories
-    system("rm -rf ./log/*");
-    system("rm -rf ./saved_imgs/*");
+    system((string("rm -rf ") + log_directory + string("*")).c_str());
+    system((string("rm -rf ") + path_to_saving_imgs + string("*")).c_str());
+    system((string("rm -rf ") + path_to_saving_video + string("*")).c_str());
 
 
     // update settings
-    cout << "update_settings" << endl;
-    update_settings("./xml/settings.xml", true);
-    cout << "update_settings DONE" << endl << endl;
+    update_settings(xml_directory + xml_settings, true);
 
     // Capture video
-    cout << endl << endl << "capture ..." << endl;
-    string path_to_saving_video = "./saved_video/";
-    string path_to_saving_imgs = "./saved_imgs/";
-    individual_descriptor descriptors;
+    cout << endl << endl << "capture ..." << endl;  
 
     // make streams
-    //stream_info *stream_1 = new stream_info("rtsp://admin:admin@192.168.144.200:554/snl/live/1/1", 25, 0, 50, path_to_saving_video, path_to_saving_imgs, descriptors.next(), true,10*25);
-    stream_info *stream_1 = new stream_info(
-                settings["stream_1"]["path_to_cam"],
-                stoi(settings["stream_1"]["fps"]),
-                stoi(settings["stream_1"]["skip_frames_saving"]),
-                stoi(settings["stream_1"]["skip_frames_classify"]),
-                path_to_saving_video, path_to_saving_imgs, descriptors.next(),
-                ((settings["stream_1"]["is_show_on_screen"] == "true")?true:false),
-                 stoi(settings["stream_1"]["frames_in_one_avi_file"]));
-    //stream_info *stream_2 = new stream_info("rtsp://admin:admin@192.168.144.200:554/snl/live/1/1", 25, 25, 25, path_to_saving_video, path_to_saving_imgs, descriptors.next(), true,100);
-    //stream_info *stream_3 = new stream_info("rtsp://admin:admin@192.168.144.200:554/snl/live/1/1", 25, 25, 25, path_to_saving_video, path_to_saving_imgs, descriptors.next(), true,100);
+    individual_descriptor descriptors;
+    vector<stream_info*> streams_info;
+    vector<thread*> threads;
 
-    // start threads
-    thread thread1(capture_cam, stream_1);
-    //thread thread2(capture_cam, stream_2);
-    //thread thread3(capture_cam, stream_3);
+    int numb_streams = stoi(settings["others"]["number_active_streams"]);
+    for(int i = 0; i < numb_streams; i++)
+    {
+        string stream_name = "stream_" + to_string(i+1);
+        streams_info.push_back(new stream_info(
+                                               settings[stream_name]["path_to_cam"],
+                                               stoi(settings[stream_name]["fps"]),
+                                               stoi(settings[stream_name]["skip_frames_saving"]),
+                                               stoi(settings[stream_name]["skip_frames_classify"]),
+                                               path_to_saving_video, path_to_saving_imgs, descriptors.next(),
+                                               ((settings[stream_name]["is_show_on_screen"] == "true")?true:false),
+                                                stoi(settings[stream_name]["frames_in_one_avi_file"])
+                                                ));
 
+        threads.push_back(new thread(capture_cam, streams_info[i]));
+        sleep(5);
+    }
 
-
-    // witing threads
-    thread1.join();
-    //thread2.join();
-    //thread3.join();
-
+    // waiting threads
+    for(int i = 0; i < numb_streams; i++)
+    {
+        threads[i]->join();
+    }
 
     return 0;
 }
@@ -133,6 +139,7 @@ int main()
 
 void update_settings(string path, bool is_print_map)
 {
+    cout << "update_settings" << endl << endl;
     ifstream in(path);
     string line;
     bool saving = false;
@@ -140,9 +147,6 @@ void update_settings(string path, bool is_print_map)
     if (in.is_open())
     {
         map<string,string> others;
-        /*others["o_test_k_1"] = "o_test_v_1";
-        others["o_test_k_2"] = "o_test_v_2";
-        others["o_test_k_3"] = "o_test_v_3";*/
         map<string,string> cur_stream;
         bool cur_stream_state = false;
         string cur_stream_name = "";
@@ -154,7 +158,6 @@ void update_settings(string path, bool is_print_map)
 
             if (line.find("<data>") != string::npos)
             {
-                cout << "start data \n";
                 saving = true;
 
             }
@@ -162,7 +165,6 @@ void update_settings(string path, bool is_print_map)
             {
                 if (line.find("</data>") != string::npos)
                 {
-                    cout << "end data \n";
                     saving = false;
                 }
                 else
@@ -228,12 +230,15 @@ void update_settings(string path, bool is_print_map)
 
     if (is_print_map)
     {
-        cout << "--- printing settings map ---" << endl;
-        // printing settings map
         for (auto elem1 : settings)
+        {
             for (auto elem2 : elem1.second)
                 cout << elem1.first << "___" << elem2.first << "___" << elem2.second << endl;
+            cout << endl;
+        }
     }
+
+    cout << "update_settings DONE" << endl << endl;
 }
 
 int capture_cam(stream_info *info)
@@ -246,6 +251,7 @@ int capture_cam(stream_info *info)
     log(log_file_full_path, "Try to connect camera ...\n", true);
 
     VideoCapture cap(info->path_to_cam);
+
     if (!cap.isOpened())
     {
         log(log_file_full_path, "Cannot connect to camera\n", true);
@@ -285,7 +291,7 @@ int capture_cam(stream_info *info)
 
         bool bSuccess = cap.read(frame); // read a new frame from video
 
-        if (!bSuccess) //if not success, break loop
+        if (!bSuccess) // if not success, break loop
         {
             log(log_file_full_path, "ERROR: Cannot read a frame from video file\n", true);
             destroyWindow(full_path_for_saving_video);

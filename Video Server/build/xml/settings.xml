@@ -1,27 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <data>
-	<test_o_k_1>test_o_v_1</test_o_k_1>
-	<test_o_k_2>test_o_v_2</test_o_k_2>
-	<test_o_k_3>test_o_v_3</test_o_k_3>
+	<number_active_streams>3</number_active_streams>
 
 	<stream_1>
 	<path_to_cam>rtsp://admin:admin@192.168.144.200:554/snl/live/1/1</path_to_cam>
 	<fps>25</fps>
-	<skip_frames_saving>0</skip_frames_saving>
+	<skip_frames_saving>5</skip_frames_saving>
 	<skip_frames_classify>50</skip_frames_classify>
 	<is_show_on_screen>true</is_show_on_screen>
 	<frames_in_one_avi_file>250</frames_in_one_avi_file>
 	</stream_1>
 
 	<stream_2>
-	<test_s2_k_1>test_s2_v_1</test_s2_k_1>
-	<test_s2_k_2>test_s2_v_2</test_s2_k_2>
-	<test_s2_k_3>test_s2_v_3</test_s2_k_3>
+	<path_to_cam>rtsp://admin:admin@192.168.144.200:554/snl/live/1/1</path_to_cam>
+	<fps>25</fps>
+	<skip_frames_saving>5</skip_frames_saving>
+	<skip_frames_classify>50</skip_frames_classify>
+	<is_show_on_screen>true</is_show_on_screen>
+	<frames_in_one_avi_file>250</frames_in_one_avi_file>
 	</stream_2>
 
 	<stream_3>
-	<test_s3_k_1>test_s3_v_1</test_s3_k_1>
-	<test_s3_k_2>test_s3_v_2</test_s3_k_2>
-	<test_s3_k_3>test_s3_v_3</test_s3_k_3>
-	</stream_3>	
+	<path_to_cam>rtsp://admin:admin@192.168.144.200:554/snl/live/1/1</path_to_cam>
+	<fps>25</fps>
+	<skip_frames_saving>5</skip_frames_saving>
+	<skip_frames_classify>50</skip_frames_classify>
+	<is_show_on_screen>true</is_show_on_screen>
+	<frames_in_one_avi_file>250</frames_in_one_avi_file>
+	</stream_3>
 </data>
