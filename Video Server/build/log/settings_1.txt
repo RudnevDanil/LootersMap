@@ -1,9 +1,0 @@
-path_to_cam = rtsp://admin:admin@192.168.144.200:554/snl/live/1/1
-fps = 25
-path_to_saving_video = ./saved_video/
-path_to_saving_imgs = ./saved_imgs/
-skip_frames_saving = 5
-skip_frames_classify = 50
-stream_descr = 1
-is_show_on_screen = 1
-frames_in_one_avi_file = 250

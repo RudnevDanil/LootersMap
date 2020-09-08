@@ -97,7 +97,6 @@ int main()
     system((string("rm -rf ") + path_to_saving_imgs + string("*")).c_str());
     system((string("rm -rf ") + path_to_saving_video + string("*")).c_str());
 
-
     // update settings
     update_settings(xml_directory + xml_settings, true);
 
