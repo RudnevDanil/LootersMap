@@ -6,6 +6,7 @@ from mtcnn import MTCNN
 import insightface
 from scipy import spatial
 import xml.etree.ElementTree as xml
+import time
 
 color_green = (0,255,0)
 color_red = (0,0,255)
@@ -24,10 +25,16 @@ known_face_encodings = np.load(path_for_data_encod)
 known_face_names = np.load(path_for_data_names)
 print(" Using dataset on %d images" % len(known_face_encodings))
 
+'''
 imgs_dir = './imgs/'
 ans_dir = './answers/'
 rec_faces_dir = "./recognized_faces/"
 unk_faces_dir = "./unknown_faces/"
+'''
+imgs_dir = '../LootersMap_cpp/LootersMap_cpp_linux/build/saved_imgs/'
+ans_dir = '../LootersMap_cpp/LootersMap_cpp_linux/build/answers/'
+rec_faces_dir = "../LootersMap_cpp/LootersMap_cpp_linux/build/recognized_faces/"
+unk_faces_dir = "../LootersMap_cpp/LootersMap_cpp_linux/build/unknown_faces/"
 save_recognized_faces = True
 save_unknown_faces = True
 delete_img_after_classificcation = True
@@ -45,22 +52,26 @@ for filename in files:
 # clear unk_faces_dir
 files = os.listdir(unk_faces_dir)
 for filename in files:
-	os.remove(ans_dir + filename)
+	os.remove(unk_faces_dir + filename)
 
 while(True):
-	print("----------- new while iteration -----------")
+	#print("----------- new while iteration -----------")
 	files = os.listdir(imgs_dir)
-	print(" --- Founded " + str(len(files)) + " files")
+	#print(" --- Founded " + str(len(files)) + " files")
+	#print(".", end = '')
 	for filename in files:
+		timer_start = time.time()
 		print("\n --- working with file named " + filename + " ...")
 		boxes = []
 		
 		frame = cv2.imread(imgs_dir + filename)
-		frame_draw = frame.copy() # debug
+		frame = cv2.resize(frame, (frame.shape[0]//4, frame.shape[1]//4), interpolation = cv2.INTER_AREA)
+		#print("f_sh = " + str(frame.shape))
+		#frame_draw = frame.copy() # debug
 		image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
 		result = detector.detect_faces(image)	
-		print(" --- founded " + str(len(result)) + " boxes")	
+		#print(" --- founded " + str(len(result)) + " boxes")	
 		for cur_result in result:
 			box_i = len(boxes)
 			bounding_box = cur_result['box']
@@ -70,7 +81,7 @@ while(True):
 			bottom = bounding_box[1] + bounding_box[3]
 
 			color = (0,155,255)
-			cv2.rectangle(frame_draw, (left, top), (right, bottom), color, 2) # debug
+			#cv2.rectangle(frame_draw, (left, top), (right, bottom), color, 2) # debug
 			
 			border_h = (int)((bottom - top)*0.40)
 			border_w = (int)((right - left)*0.40)
@@ -96,13 +107,15 @@ while(True):
 					if face.gender==0:
 						gender = 'Female'
 					
+					'''
 					print("\tgender:%s"%(gender))
 					print("\tembedding shape:%s"%face.embedding.shape)
 					print("\tbbox:%s"%(face.bbox.astype(np.int).flatten())) # coordinates of face
 					print("\tlandmark:%s"%(face.landmark.astype(np.int).flatten())) # coordinates of 5 points (eyes and nose)
 					print("")
-					cv2.putText(frame_draw, name, (left, bottom + 40), font, 1.5, color, 2) # debug
-					cv2.putText(frame_draw, "Gender %s" % (gender), (left, bottom + 80), font, 1.5, color, 2) # debug
+					'''
+					#cv2.putText(frame_draw, name, (left, bottom + 40), font, 1.5, color, 2) # debug
+					#cv2.putText(frame_draw, "Gender %s" % (gender), (left, bottom + 80), font, 1.5, color, 2) # debug
 				
 					boxes.append([])
 					boxes[box_i].append(left-border_w)
@@ -127,23 +140,25 @@ while(True):
 		xml.ElementTree(root).write(ans_dir + filename[:-4] + ".xml")
 		
 		# record rec and unknown face if neccesarry (by settings for rec and for unknown)
-		if save_recognized_faces and (boxes[i][5] != "Unknown"):
-			for i in range(len(boxes)):			
-				cv2.imwrite(rec_faces_dir + "face_" + str(i) + "_" + filename[:-4] + "_" + boxes[i][5] + ".png", frame[boxes[i][1]:boxes[i][3],boxes[i][0]:boxes[i][2]])
-		
-		if save_unknown_faces and (boxes[i][5] == "Unknown"):
-			for i in range(len(boxes)):			
-				cv2.imwrite(unk_faces_dir + "face_" + str(i) + "_" + filename[:-4] + ".png", frame[boxes[i][1]:boxes[i][3],boxes[i][0]:boxes[i][2]])
+		for i in range(len(boxes)):
+			if save_recognized_faces and (boxes[i][5] != "Unknown"):
+				for i in range(len(boxes)):			
+					cv2.imwrite(rec_faces_dir + "face_" + str(i) + "_" + filename[:-4] + "_" + boxes[i][5] + ".png", frame[boxes[i][1]:boxes[i][3],boxes[i][0]:boxes[i][2]])
+			
+			if save_unknown_faces and (boxes[i][5] == "Unknown"):
+				for i in range(len(boxes)):			
+					cv2.imwrite(unk_faces_dir + "face_" + str(i) + "_" + filename[:-4] + ".png", frame[boxes[i][1]:boxes[i][3],boxes[i][0]:boxes[i][2]])
 		
 		# delete this file
 		if delete_img_after_classificcation:
 			os.remove(imgs_dir + filename)
-
+		
 		# show result on the screen
 		#cv2.imshow("frame", frame_draw) # debug
 		#cv2.waitKey(0) # debug
-
-
+	
+		timer_end = time.time()
+		print("elapsed time is " + str(timer_end - timer_start))
 
 
 
