@@ -1,0 +1,3 @@
+This is ./saved_video/1.avi from cam rtsp://admin:admin@192.168.144.200:554/snl/live/1/1
+Try to connect camera ...
+Camera connected!

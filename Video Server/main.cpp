@@ -5,6 +5,7 @@
 #include <string>
 #include <thread>
 #include <map>
+#include <ctime>
 
 using namespace cv;
 using namespace std;
@@ -34,16 +35,17 @@ public:
 class stream_info
 {
 public:
-    string path_to_cam;			// ïîëíûé ïóñòü ïî êîòîðîìó VideoCapture ñìîæåò ïîëó÷èòü äîñòóï
-    string path_to_saving_video;// äèððåêòîðèÿ äëÿ ñîõðàíåíèÿ âèäåî
-    string path_to_saving_imgs;	// äèððåêòîðèÿ äëÿ ñîõðàíåíèÿ èçîáðàæåíèé
-    int skip_frames_saving;		// ñòîëüêî êàäðîâ áóäåò ïðîïóùåíî ïðè ñîõðàíåíèè âèäåî
-    int skip_frames_classify;	// ñòîëüêî êàäðîâ áóäåò ïðîïóùåíî ïðè êëàññèôèêàöèè êàäðîâ
-    int fps;					// êàêîå fps áóäåò óêàçàíî ê àíîòàöèè ê âèäåî
-    int stream_descr;			// Äåñêðèïòîð ñòðèìèíãà. Ñëóæèò äëÿ ðàçäåëåíèÿ ëîã ôàéëîâ, ôàéëîâ âèäåî è ïðî÷åãî. ó êàæäîãî ñòðèìèíãà èíäèâèäóàëüíûé.
-    bool is_show_on_screen;		// Ïîêàçûâàòü ëè ñòðèì íà ýêðàíå
+    string path_to_cam;			// VideoCapture rstp link
+    string path_to_saving_video;// where to save avi
+    string path_to_saving_imgs;	// where to save frames
+    int skip_frames_saving;		// amount skipped frames while recording avi. -1 for not saving
+    int skip_frames_classify;	// amount skipped frames in saving imgs. Recorded imgs will be classifyed. -1 for not classify
+    int fps;					// fps in recorded video
+    int stream_descr;			// individual descriptor of the stream
+    bool is_show_on_screen;		// will online video be shown on the screen
+    int frames_in_one_avi_file; // max size of avi measured in frames
 
-    stream_info(string path_to_cam, int fps, int skip_frames_saving, int skip_frames_classify, string path_to_saving_video, string path_to_saving_imgs, int stream_descr, bool is_show_on_screen)
+    stream_info(string path_to_cam, int fps, int skip_frames_saving, int skip_frames_classify, string path_to_saving_video, string path_to_saving_imgs, int stream_descr, bool is_show_on_screen, int frames_in_one_avi_file)
     {
         this->path_to_cam = path_to_cam;
         this->fps = fps;
@@ -53,6 +55,7 @@ public:
         this->skip_frames_classify = skip_frames_classify;
         this->stream_descr = stream_descr;
         this->is_show_on_screen = is_show_on_screen;
+        this->frames_in_one_avi_file = frames_in_one_avi_file;
     }
 };
 
@@ -65,18 +68,9 @@ int capture_cam(stream_info *info);
 // Ëîãèðîâàíèå èíôîðìàöèè â ñîîòâåòñòâóþùåì ïîòîêó ôàéëå
 void log(string full_file_path, string message, bool is_cout = false);
 
-void fff()
-{
-    cout << "fff\n";
-}
-
 int main()
 {
-    // îò÷èñòèòü ëîã äèððåêòîðèþ.
     // remove files from log and saved_imgs directories
-    //!!!//system("del /q \"log\"");
-    //!!!//system("del /q \"saved_imgs\"");
-
     system("rm -rf ./log/*");
     system("rm -rf ./saved_imgs/*");
 
@@ -93,50 +87,19 @@ int main()
     individual_descriptor descriptors;
 
     // make streams
-    stream_info *stream_1 = new stream_info("rtsp://admin:admin@192.168.144.200:554/snl/live/1/1", 25, 25, 25, path_to_saving_video, path_to_saving_imgs, descriptors.next(), true);
-    //stream_info *stream_2 = new stream_info("rtsp://admin:admin@192.168.144.200:554/snl/live/1/1", 25, 25, 25, path_to_saving_video, path_to_saving_imgs, descriptors.next(), true);
-    //stream_info *stream_3 = new stream_info("rtsp://admin:admin@192.168.144.200:554/snl/live/1/1", 25, 25, 25, path_to_saving_video, path_to_saving_imgs, descriptors.next(), true);
+    stream_info *stream_1 = new stream_info("rtsp://admin:admin@192.168.144.200:554/snl/live/1/1", 25, 0, 50, path_to_saving_video, path_to_saving_imgs, descriptors.next(), true,10*25);
+    //stream_info *stream_2 = new stream_info("rtsp://admin:admin@192.168.144.200:554/snl/live/1/1", 25, 25, 25, path_to_saving_video, path_to_saving_imgs, descriptors.next(), true,100);
+    //stream_info *stream_3 = new stream_info("rtsp://admin:admin@192.168.144.200:554/snl/live/1/1", 25, 25, 25, path_to_saving_video, path_to_saving_imgs, descriptors.next(), true,100);
 
     // start threads
-    thread *thread1 = new thread(fff);
-    //thread thread1(capture_cam, stream_1);
+    thread thread1(capture_cam, stream_1);
     //thread thread2(capture_cam, stream_2);
     //thread thread3(capture_cam, stream_3);
 
 
 
-
-
-
-
-
-    /*
-    //															test opencv
-    // Read the image file
-    Mat image = imread("D:/My OpenCV Website/Eagle.jpg");
-
-    if (image.empty()) // Check for failure
-    {
-        cout << "Could not open or find the image" << endl;
-         //wait for any key press
-        return -1;
-    }
-
-    String windowName = "My HelloWorld Window"; //Name of the window
-
-    namedWindow(windowName); // Create a window
-
-    imshow(windowName, image); // Show our image inside the created window.
-
-    waitKey(0); // Wait for any keystroke in the window
-
-    destroyWindow(windowName); //destroy the created window
-    */
-
-
-
     // witing threads
-    thread1->join();
+    thread1.join();
     //thread2.join();
     //thread3.join();
 
@@ -206,6 +169,7 @@ void update_settings(string path, bool is_print_map)
 
 int capture_cam(stream_info *info)
 {
+
     string full_path_for_saving_video = info->path_to_saving_video + to_string(info->stream_descr) + ".avi";
     string log_file_full_path = log_directory + to_string(info->stream_descr) + ".txt";
     log(log_file_full_path, "This is " + full_path_for_saving_video + " from cam " + info->path_to_cam + "\n");
@@ -227,9 +191,16 @@ int capture_cam(stream_info *info)
 
     Size frameSize(static_cast<int>(cap.get(CV_CAP_PROP_FRAME_WIDTH)), static_cast<int>(cap.get(CV_CAP_PROP_FRAME_HEIGHT)));
 
-    VideoWriter oVideoWriter(full_path_for_saving_video, CV_FOURCC('P', 'I', 'M', '1'), info->fps, frameSize, true);
+    int avi_file_counter = 0;
+    int frames_recorded = 0;
+    string curent_avi_path = full_path_for_saving_video;
+    time_t st_recording_date = time(0); // now time
+    struct tm *now = localtime(&st_recording_date);
+    string date_formated = to_string(now->tm_year + 1900) + "_" + to_string(now->tm_mon + 1) + "_" + to_string(now->tm_mday) + "__" + to_string(now->tm_hour) + ":" + to_string(now->tm_min) + ":" + to_string(now->tm_sec);
+    curent_avi_path.insert(full_path_for_saving_video.length()-4,"__" + date_formated + "__" + to_string(avi_file_counter));
+    VideoWriter *oVideoWriter = new VideoWriter(curent_avi_path, CV_FOURCC('P', 'I', 'M', '1'), info->fps, frameSize, true);
 
-    if (!oVideoWriter.isOpened())
+    if (!oVideoWriter->isOpened())
     {
         log(log_file_full_path, "ERROR: Failed to write the video\n", true);
         return -1;
@@ -253,7 +224,18 @@ int capture_cam(stream_info *info)
 
         if (skiped_frames_saving++ == info->skip_frames_saving)
         {
-            oVideoWriter.write(frame); //writer the frame into the file
+            if (frames_recorded >= info->frames_in_one_avi_file)
+            {
+                curent_avi_path = full_path_for_saving_video;
+                st_recording_date = time(0); // now time
+                now = localtime(&st_recording_date);
+                string date_formated = to_string(now->tm_year + 1900) + "_" + to_string(now->tm_mon + 1) + "_" + to_string(now->tm_mday) + "__" + to_string(now->tm_hour) + ":" + to_string(now->tm_min) + ":" + to_string(now->tm_sec);
+                curent_avi_path.insert(full_path_for_saving_video.length()-4,"__" + date_formated + "__" + to_string(++avi_file_counter));
+                oVideoWriter = new VideoWriter(curent_avi_path, CV_FOURCC('P', 'I', 'M', '1'), info->fps, frameSize, true);
+                frames_recorded = 0;
+            }
+            oVideoWriter->write(frame); //writer the frame into the file
+            frames_recorded++;
             skiped_frames_saving = 0;
         }
 
