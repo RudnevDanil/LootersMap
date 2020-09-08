@@ -3,9 +3,9 @@ import os
 import numpy as np
 import insightface
 
-path_for_imgs = '../data/faces_6/'
-path_for_data_encod = './data_mtcnn_encod.npy'
-path_for_data_names = './data_mtcnn_names.npy'
+path_for_imgs = '/home/user/Desktop/Face_Recognition/data/faces_6/'
+path_for_data_encod = './data_encod.npy'
+path_for_data_names = './data_names.npy'
 
 model = insightface.app.FaceAnalysis()
 model.prepare(ctx_id = -1, nms=0.4)

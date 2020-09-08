@@ -35,6 +35,7 @@ imgs_dir = '../LootersMap_cpp/LootersMap_cpp_linux/build/saved_imgs/'
 ans_dir = '../LootersMap_cpp/LootersMap_cpp_linux/build/answers/'
 rec_faces_dir = "../LootersMap_cpp/LootersMap_cpp_linux/build/recognized_faces/"
 unk_faces_dir = "../LootersMap_cpp/LootersMap_cpp_linux/build/unknown_faces/"
+answer_file_name = "general_answer.txt"
 save_recognized_faces = True
 save_unknown_faces = True
 delete_img_after_classificcation = True
@@ -65,7 +66,7 @@ while(True):
 		boxes = []
 		
 		frame = cv2.imread(imgs_dir + filename)
-		frame = cv2.resize(frame, (frame.shape[0]//4, frame.shape[1]//4), interpolation = cv2.INTER_AREA)
+		#frame = cv2.resize(frame, (frame.shape[0]//4, frame.shape[1]//4), interpolation = cv2.INTER_AREA)
 		#print("f_sh = " + str(frame.shape))
 		#frame_draw = frame.copy() # debug
 		image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -126,6 +127,7 @@ while(True):
 					boxes[box_i].append(name)
 
 		# record answer to special file. create and record .xml answer
+		'''
 		root = xml.Element("boxes")
 		for i in range(len(boxes)):
 			xml_box = xml.Element("box_" + str(i)) # не должно название повторяться !
@@ -137,7 +139,15 @@ while(True):
 			xml.SubElement(xml_box, "gender").text = str(boxes[i][4])
 			xml.SubElement(xml_box, "name").text = str(boxes[i][5])			
 
-		xml.ElementTree(root).write(ans_dir + filename[:-4] + ".xml")
+		xml.ElementTree(root).write(ans_dir + filename[:-4] + ("_empty" if len(boxes) == 0 else "") + ".xml")
+		'''
+		
+		# record answer to special file. append to .txt answer
+		if len(boxes) > 0:
+			answer_file = open(ans_dir + answer_file_name, 'a')
+			for i in range(len(boxes)):
+				answer_file.write(filename[:-4] + " " + str(boxes[i][0]) + " " + str(boxes[i][1]) + " " + str(boxes[i][2]) + " " + str(boxes[i][3]) + " " + str(boxes[i][4]) + " " + str(boxes[i][5]) + "\n")
+			answer_file.close()
 		
 		# record rec and unknown face if neccesarry (by settings for rec and for unknown)
 		for i in range(len(boxes)):
