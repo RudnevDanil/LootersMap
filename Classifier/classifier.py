@@ -14,8 +14,8 @@ detector = MTCNN()
 model = insightface.app.FaceAnalysis()
 model.prepare(ctx_id = -1, nms=0.4)
 
-path_for_data_encod = './data_mtcnn_encod.npy'
-path_for_data_names = './data_mtcnn_names.npy'
+path_for_data_encod = './data_encod.npy'
+path_for_data_names = './data_names.npy'
 names = ['1_Omelchenko','2_Victoria','3_Rudnev','4_Oleg','5_Irina','6_Alexandr','7_Lena','8_Somebody','9_Roiby','10_Priimakov', '11_OlegDmitr','12_Vital','13_Ponkratov','14_Edik','15_Vova','16_Stud','17_Sveta','18_&&&','19_Max','20_Petrovich']
 font = cv2.FONT_HERSHEY_DUPLEX
 
@@ -28,6 +28,25 @@ imgs_dir = './imgs/'
 ans_dir = './answers/'
 rec_faces_dir = "./recognized_faces/"
 unk_faces_dir = "./unknown_faces/"
+save_recognized_faces = True
+save_unknown_faces = True
+delete_img_after_classificcation = True
+
+# clear answer directory
+files = os.listdir(ans_dir)
+for filename in files:
+	os.remove(ans_dir + filename)
+
+# clear rec_faces_dir
+files = os.listdir(rec_faces_dir)
+for filename in files:
+	os.remove(rec_faces_dir + filename)
+
+# clear unk_faces_dir
+files = os.listdir(unk_faces_dir)
+for filename in files:
+	os.remove(ans_dir + filename)
+
 while(True):
 	print("----------- new while iteration -----------")
 	files = os.listdir(imgs_dir)
@@ -37,6 +56,7 @@ while(True):
 		boxes = []
 		
 		frame = cv2.imread(imgs_dir + filename)
+		frame_draw = frame.copy() # debug
 		image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
 		result = detector.detect_faces(image)	
@@ -44,14 +64,13 @@ while(True):
 		for cur_result in result:
 			box_i = len(boxes)
 			bounding_box = cur_result['box']
-			keypoints = cur_result['keypoints']
 			left = bounding_box[0]
 			top = bounding_box[1]
 			right = bounding_box[0]+bounding_box[2]
 			bottom = bounding_box[1] + bounding_box[3]
 
 			color = (0,155,255)
-			cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
+			cv2.rectangle(frame_draw, (left, top), (right, bottom), color, 2) # debug
 			
 			border_h = (int)((bottom - top)*0.40)
 			border_w = (int)((right - left)*0.40)
@@ -82,44 +101,47 @@ while(True):
 					print("\tbbox:%s"%(face.bbox.astype(np.int).flatten())) # coordinates of face
 					print("\tlandmark:%s"%(face.landmark.astype(np.int).flatten())) # coordinates of 5 points (eyes and nose)
 					print("")
-					cv2.putText(frame, name, (left, bottom + 40), font, 1.5, color, 2)
-					cv2.putText(frame, "Gender %s" % (gender), (left, bottom + 80), font, 1.5, color, 2)
+					cv2.putText(frame_draw, name, (left, bottom + 40), font, 1.5, color, 2) # debug
+					cv2.putText(frame_draw, "Gender %s" % (gender), (left, bottom + 80), font, 1.5, color, 2) # debug
 				
 					boxes.append([])
-					boxes[box_i].append(left)
-					boxes[box_i].append(top)
-					boxes[box_i].append(right)
-					boxes[box_i].append(bottom)
+					boxes[box_i].append(left-border_w)
+					boxes[box_i].append(top-border_h)
+					boxes[box_i].append(right+border_w)
+					boxes[box_i].append(bottom+border_h)
 					boxes[box_i].append(gender)
 					boxes[box_i].append(name)
 
-					
-
-
-		# record answer to special file
-		# ---
-		print(boxes)
-		# create and record .xml answer
+		# record answer to special file. create and record .xml answer
 		root = xml.Element("boxes")
-		for box in boxes:
-			xml_box = xml.Element("box")
+		for i in range(len(boxes)):
+			xml_box = xml.Element("box_" + str(i)) # не должно название повторяться !
 			root.append(xml_box)
-			b = xml.SubElement(xml_box, "left")
-			b.text = str(box[0])
+			xml.SubElement(xml_box, "left").text = str(boxes[i][0])
+			xml.SubElement(xml_box, "top").text = str(boxes[i][1])
+			xml.SubElement(xml_box, "right").text = str(boxes[i][2])
+			xml.SubElement(xml_box, "bottom").text = str(boxes[i][3])
+			xml.SubElement(xml_box, "gender").text = str(boxes[i][4])
+			xml.SubElement(xml_box, "name").text = str(boxes[i][5])			
 
-		tree = xml.ElementTree(root)
-		with open(ans_dir + filename[:-4] + ".xml", 'w') as fh:
-			tree.write(fh) # FAIL !!! 
-
+		xml.ElementTree(root).write(ans_dir + filename[:-4] + ".xml")
+		
 		# record rec and unknown face if neccesarry (by settings for rec and for unknown)
-		# ---
+		if save_recognized_faces and (boxes[i][5] != "Unknown"):
+			for i in range(len(boxes)):			
+				cv2.imwrite(rec_faces_dir + "face_" + str(i) + "_" + filename[:-4] + "_" + boxes[i][5] + ".png", frame[boxes[i][1]:boxes[i][3],boxes[i][0]:boxes[i][2]])
+		
+		if save_unknown_faces and (boxes[i][5] == "Unknown"):
+			for i in range(len(boxes)):			
+				cv2.imwrite(unk_faces_dir + "face_" + str(i) + "_" + filename[:-4] + ".png", frame[boxes[i][1]:boxes[i][3],boxes[i][0]:boxes[i][2]])
 		
 		# delete this file
-		# ---
+		if delete_img_after_classificcation:
+			os.remove(imgs_dir + filename)
 
 		# show result on the screen
-		cv2.imshow("frame", frame) # debug
-		cv2.waitKey(0) # debug
+		#cv2.imshow("frame", frame_draw) # debug
+		#cv2.waitKey(0) # debug
 
 
 
