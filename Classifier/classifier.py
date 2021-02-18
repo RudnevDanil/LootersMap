@@ -31,10 +31,12 @@ ans_dir = './answers/'
 rec_faces_dir = "./recognized_faces/"
 unk_faces_dir = "./unknown_faces/"
 '''
-imgs_dir = '../LootersMap_cpp/LootersMap_cpp_linux/build/saved_imgs/'
-ans_dir = '../LootersMap_cpp/LootersMap_cpp_linux/build/answers/'
-rec_faces_dir = "../LootersMap_cpp/LootersMap_cpp_linux/build/recognized_faces/"
-unk_faces_dir = "../LootersMap_cpp/LootersMap_cpp_linux/build/unknown_faces/"
+
+folders_path = '../Video Server/build/'
+imgs_dir = folders_path + 'saved_imgs/'
+ans_dir = folders_path + 'answers/'
+rec_faces_dir = folders_path + 'recognized_faces/'
+unk_faces_dir = folders_path + 'unknown_faces/'
 answer_file_name = "general_answer.txt"
 save_recognized_faces = True
 save_unknown_faces = True
