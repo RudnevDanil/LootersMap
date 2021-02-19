@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data>
+	<test_o_k_1>test_o_v_1</test_o_k_1>
+	<test_o_k_2>test_o_v_2</test_o_k_2>
+	<test_o_k_3>test_o_v_3</test_o_k_3>
+
+	<stream_1>
+	<test_s1_k_1>test_s1_v_1</test_s1_k_1>
+	<test_s1_k_2>test_s1_v_2</test_s1_k_2>
+	<test_s1_k_3>test_s1_v_3</test_s1_k_3>
+	</stream_1>
+
+	<stream_2>
+	<test_s2_k_1>test_s2_v_1</test_s2_k_1>
+	<test_s2_k_2>test_s2_v_2</test_s2_k_2>
+	<test_s2_k_3>test_s2_v_3</test_s2_k_3>
+	</stream_2>
+
+	<stream_3>
+	<test_s3_k_1>test_s3_v_1</test_s3_k_1>
+	<test_s3_k_2>test_s3_v_2</test_s3_k_2>
+	<test_s3_k_3>test_s3_v_3</test_s3_k_3>
+	</stream_3>	
+</data>
