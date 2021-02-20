@@ -7,9 +7,7 @@ import insightface
 from scipy import spatial
 import xml.etree.ElementTree as xml
 import time
-
-color_green = (0,255,0)
-color_red = (0,0,255)
+import requests 
 
 detector = MTCNN()
 model = insightface.app.FaceAnalysis()
@@ -17,6 +15,7 @@ model.prepare(ctx_id = -1, nms=0.4)
 
 encod_path = './data_encod.npy'
 ids__path = './data_ids.npy'
+request_url = "http://localhost:8000/php/test.php"
 font = cv2.FONT_HERSHEY_DUPLEX
 
 print(" Load a trained data...")
@@ -25,9 +24,6 @@ known_face_ids = np.load(ids__path)
 print(" Using dataset on %d images" % len(known_face_encodings))
 
 imgs_dir = '../LootersMap_cpp/LootersMap_cpp_linux/build/saved_imgs/'
-ans_dir = '../LootersMap_cpp/LootersMap_cpp_linux/build/answers/'
-rec_faces_dir = "../LootersMap_cpp/LootersMap_cpp_linux/build/recognized_faces/"
-unk_faces_dir = "../LootersMap_cpp/LootersMap_cpp_linux/build/unknown_faces/"
 delete_img_after_classificcation = True
 
 while(True):
@@ -79,6 +75,12 @@ while(True):
 			print(boxes[i][4])
 			#cv2.imshow("frame", frame[boxes[i][1]:boxes[i][3],boxes[i][0]:boxes[i][2]]) # debug
 			#cv2.waitKey(0) # debug
+			print(frame[boxes[i][1]:boxes[i][3],boxes[i][0]:boxes[i][2]])
+			request = requests.post(request_url, {'answerId': boxes[i][4], 'img': frame[boxes[i][1]:boxes[i][3],boxes[i][0]:boxes[i][2]]})
+			if request.status_code != 200:
+				print("Error posting. Request status code is ", request.status_code)
+			else:
+				print(request.content) # debug
 
 		# delete this file
 		if delete_img_after_classificcation:
