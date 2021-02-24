@@ -1,13 +1,8 @@
-import face_recognition
-import cv2, os
+import cv2, os, time, requests, insightface
 import numpy as np
 from PIL import Image
 from mtcnn import MTCNN
-import insightface
-from scipy import spatial
-import xml.etree.ElementTree as xml
-import time
-import requests 
+from scipy.spatial.distance import cosine
 
 detector = MTCNN()
 model = insightface.app.FaceAnalysis()
@@ -15,7 +10,6 @@ model.prepare(ctx_id = -1, nms=0.4)
 
 encod_path = './data_encod.npy'
 ids__path = './data_ids.npy'
-request_url = "http://localhost:8000/php/test.php"
 font = cv2.FONT_HERSHEY_DUPLEX
 
 print(" Load a trained data...")
@@ -24,13 +18,14 @@ known_face_ids = np.load(ids__path)
 print(" Using dataset on %d images" % len(known_face_encodings))
 
 imgs_dir = '../LootersMap_cpp/LootersMap_cpp_linux/build/saved_imgs/'
+faces_dir = './faces/'
 delete_img_after_classificcation = True
-
+general_face_counter = 0
 while(True):
 	files = os.listdir(imgs_dir)
 	for filename in files:
 		timer_start = time.time()
-		print("\n --- working with file named " + filename + " ...")
+		print(" --- working with file named " + filename + " ...")
 		boxes = []	
 
 		frame = cv2.imread(imgs_dir + filename)
@@ -57,7 +52,7 @@ while(True):
 					min_ind, min_val = -1 , 1.1
 					tolerance = 0.6
 					for i in range(0,len(known_face_encodings)):
-						byf = spatial.distance.cosine(face.normed_embedding, known_face_encodings[i])
+						byf = cosine(face.normed_embedding, known_face_encodings[i])
 						if byf < min_val:
 							min_val = byf
 							min_ind = i
@@ -72,19 +67,12 @@ while(True):
 					boxes[box_i].append(answer)
 
 		for i in range(len(boxes)):
-			print(boxes[i][4])
-			#cv2.imshow("frame", frame[boxes[i][1]:boxes[i][3],boxes[i][0]:boxes[i][2]]) # debug
-			#cv2.waitKey(0) # debug
-			print(frame[boxes[i][1]:boxes[i][3],boxes[i][0]:boxes[i][2]])
-			request = requests.post(request_url, {'answerId': boxes[i][4], 'img': frame[boxes[i][1]:boxes[i][3],boxes[i][0]:boxes[i][2]]})
-			if request.status_code != 200:
-				print("Error posting. Request status code is ", request.status_code)
-			else:
-				print(request.content) # debug
-
+			cv2.imwrite(faces_dir + "f_" + str(general_face_counter) + "_" + str(boxes[i][4]) + ".png", frame[boxes[i][1]:boxes[i][3],boxes[i][0]:boxes[i][2]])
+			general_face_counter += 1
+			
 		# delete this file
 		if delete_img_after_classificcation:
 			os.remove(imgs_dir + filename)
 	
 		timer_end = time.time()
-		print("elapsed time is " + str(timer_end - timer_start))
+		print("elapsed time is " + str(timer_end - timer_start) + "\n")
