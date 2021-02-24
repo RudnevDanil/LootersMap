@@ -3,7 +3,7 @@ import os
 import numpy as np
 import insightface
 
-path_for_imgs = '/home/user/Desktop/Face_Recognition/data/faces/'
+path_for_imgs = './train_data/'
 encod_path = './data_encod.npy'
 ids_path = './data_ids.npy'
 
@@ -20,10 +20,14 @@ for imagePath in image_paths:
 	byf = np.array(Image.open(imagePath),'uint8')
 	faces_from_model = model.get( byf )
 	if len(faces_from_model):
-		index = filename.find('_')
-		if index != -1:
+		print(filename)
+		index1 = filename.find('_')
+		index2 = filename.find('.png')
+		if index1 != -1 and index2 != -1:
 			encods.append(faces_from_model[0].normed_embedding)
-			ids.append(int(filename[:index]))
+			ids.append(int(filename[index1 + 1:index2]))
+		else:
+			print(" --- filename error ---")
 print(" Reading images ... DONE\n")
 
 print(" Saving ...")

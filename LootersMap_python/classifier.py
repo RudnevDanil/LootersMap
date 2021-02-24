@@ -1,4 +1,4 @@
-import cv2, os, time, requests, insightface
+import os, time, requests, insightface
 import numpy as np
 from PIL import Image
 from mtcnn import MTCNN
@@ -10,7 +10,6 @@ model.prepare(ctx_id = -1, nms=0.4)
 
 encod_path = './data_encod.npy'
 ids__path = './data_ids.npy'
-font = cv2.FONT_HERSHEY_DUPLEX
 
 print(" Load a trained data...")
 known_face_encodings = np.load(encod_path)
@@ -28,8 +27,8 @@ while(True):
 		print(" --- working with file named " + filename + " ...")
 		boxes = []	
 
-		frame = cv2.imread(imgs_dir + filename)
-		image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+		frame = np.array(Image.open(imgs_dir + filename),'uint8')
+		image = frame
 
 		result = detector.detect_faces(image)	
 		for cur_result in result:
@@ -67,7 +66,8 @@ while(True):
 					boxes[box_i].append(answer)
 
 		for i in range(len(boxes)):
-			cv2.imwrite(faces_dir + "f_" + str(general_face_counter) + "_" + str(boxes[i][4]) + ".png", frame[boxes[i][1]:boxes[i][3],boxes[i][0]:boxes[i][2]])
+			img = Image.fromarray(np.uint8(frame[boxes[i][1]:boxes[i][3],boxes[i][0]:boxes[i][2]])).convert('RGB')
+			img.save(faces_dir + "f" + str(general_face_counter) + "_" + str(boxes[i][4]) + ".png", "PNG")
 			general_face_counter += 1
 			
 		# delete this file
