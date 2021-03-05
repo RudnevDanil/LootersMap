@@ -12,11 +12,12 @@
 using namespace cv;
 using namespace std;
 
-string log_directory = "/home/user/Desktop/LootersMap_last/workpoint/LootersMap_cpp/LootersMap_cpp_linux/build/log/";
-string xml_directory = "/home/user/Desktop/LootersMap_last/workpoint/LootersMap_cpp/LootersMap_cpp_linux/build/xml/";
+string build_directory = "/home/user/Desktop/LootersMap/LootersMap_cpp/LootersMap_cpp_linux/build/";
+string log_directory = build_directory + "log/";
+string xml_directory = build_directory + "xml/";
 string xml_settings = "settings.xml";//settings_example
-string path_to_saving_video = "/home/user/Desktop/LootersMap_last/workpoint/LootersMap_cpp/LootersMap_cpp_linux/build/saved_video/";
-string path_to_saving_imgs = "/home/user/Desktop/LootersMap_last/workpoint/LootersMap_cpp/LootersMap_cpp_linux/build/saved_imgs/";
+string path_to_saving_video = build_directory + "saved_video/";
+string path_to_saving_imgs = build_directory + "saved_imgs/";
 //string xml_directory = "/home/user/Desktop/LootersMap_last/workpoint/LootersMap_cpp/LootersMap_cpp_linux/build/xml/";
 
 /*string log_directory = "./log/";
@@ -150,6 +151,7 @@ void update_settings(string path, bool is_print_map)
 
     if (in.is_open())
     {
+        cout << "..." << endl;
         map<string,string> others;
         map<string,string> cur_stream;
         bool cur_stream_state = false;

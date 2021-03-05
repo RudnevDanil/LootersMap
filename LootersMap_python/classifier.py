@@ -24,7 +24,13 @@ while(True):
 	files = os.listdir(imgs_dir)
 	for filename in files:
 		timer_start = time.time()
-		print(" --- working with file named " + filename + " ...")
+		
+		indexCamCode = filename.find('_')
+		if indexCamCode == -1:
+			print(" --- filename error ---")
+		else:
+			indexCamCode = filename[:indexCamCode]
+		print(" --- working with file named " + filename + " ... from camera " + indexCamCode)
 		boxes = []	
 
 		frame = np.array(Image.open(imgs_dir + filename),'uint8')
@@ -67,7 +73,7 @@ while(True):
 
 		for i in range(len(boxes)):
 			img = Image.fromarray(np.uint8(frame[boxes[i][1]:boxes[i][3],boxes[i][0]:boxes[i][2]])).convert('RGB')
-			img.save(faces_dir + "f" + str(general_face_counter) + "_" + str(boxes[i][4]) + ".png", "PNG")
+			img.save(faces_dir + "f" + str(general_face_counter) + "_" + str(boxes[i][4]) + "_" + indexCamCode + ".png", "PNG")
 			general_face_counter += 1
 			
 		# delete this file

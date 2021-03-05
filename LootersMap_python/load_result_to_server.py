@@ -23,14 +23,16 @@ for imagePath in image_paths:
 	print("\n"+filename)
 	
 	index1 = filename.find('_')
-	index2 = filename.find('.png')
-	if index1 == -1 or index2 == -1:
+	index2 = filename.find('_', index1 + 1)
+	index3 = filename.find('.png')
+	if index1 == -1 or index2 == -1 or index3 == -1:
 		print(" --- filename error ---")
 		quit()		
-	
 	staff_id = int(filename[index1 + 1:index2])
+	camCode = 	int(filename[index2 + 1:index3])
+	
 	files = {'img': open(imagePath, 'rb')}
-	request = requests.post(url, {'login': login, 'pass': password, 'staff_id': staff_id}, files=files)
+	request = requests.post(url, {'login': login, 'pass': password, 'staff_id': staff_id, 'camCode': camCode}, files=files)
 	print("request code = ", request)
 	if request.status_code != 200:
 		print(" --- request error --- response code = " + str(request.status_code))

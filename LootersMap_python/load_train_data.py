@@ -23,7 +23,6 @@ print("request code = ", request)
 #print(request.content)
 #print(request.text)
 
-
 general_counter = 0
 content = json.loads(request.content)
 print(content['staff_id'])
@@ -32,5 +31,7 @@ if(content['answer'] == 'done'):
 		image = Image.open(io.BytesIO(base64.b64decode(content['arr'][i])))
 		image.save(train_data_path + "f" + str(general_counter) + "_" + content['staff_id'][i] + ".png", "PNG")
 		general_counter += 1
+	
+	#os.system('python3 train.py &')
 else:
 	print(" --- HTTP error ---")

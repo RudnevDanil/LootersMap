@@ -1,3 +1,3 @@
-This is /home/user/Desktop/LootersMap_last/workpoint/LootersMap_cpp/LootersMap_cpp_linux/build/saved_video/1.avi from cam rtsp://admin:admin@192.168.144.200:554/snl/live/1/1
+This is /home/user/Desktop/LootersMap/LootersMap_cpp/LootersMap_cpp_linux/build/saved_video/1.avi from cam 
 Try to connect camera ...
 Cannot connect to camera

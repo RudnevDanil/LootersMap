@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data>
+	<number_active_streams>1</number_active_streams>
+	<stream_1>
+	<path_to_cam>rtsp://admin:admin@192.168.144.200:554/snl/live/1/1</path_to_cam>
+	<fps>25</fps>
+	<skip_frames_saving>5</skip_frames_saving>
+	<skip_frames_classify>50</skip_frames_classify>
+	<is_show_on_screen>true</is_show_on_screen>
+	<frames_in_one_avi_file>250</frames_in_one_avi_file>
+	</stream_1>
+	<stream_2>
+	<path_to_cam>rtsp://admin:admin@192.168.144.200:554/snl/live/1/1</path_to_cam>
+	<fps>25</fps>
+	<skip_frames_saving>5</skip_frames_saving>
+	<skip_frames_classify>50</skip_frames_classify>
+	<is_show_on_screen>true</is_show_on_screen>
+	<frames_in_one_avi_file>250</frames_in_one_avi_file>
+	</stream_2>
+	<stream_3>
+	<path_to_cam>rtsp://admin:admin@192.168.144.200:554/snl/live/1/1</path_to_cam>
+	<fps>25</fps>
+	<skip_frames_saving>5</skip_frames_saving>
+	<skip_frames_classify>50</skip_frames_classify>
+	<is_show_on_screen>true</is_show_on_screen>
+	<frames_in_one_avi_file>250</frames_in_one_avi_file>
+	</stream_3>
+</data>
