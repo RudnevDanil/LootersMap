@@ -35,7 +35,7 @@ if(content['answer'] == 'done'):
 		data += "\t<frames_in_one_avi_file>" + content['arr'][i][5] + "</frames_in_one_avi_file>\n"
 		data += "\t<scaling>" + content['arr'][i][6] + "</scaling>\n"
 		data += "\t</stream_" + str(i+1) + ">\n"
-	data += "<\data>\n";
+	data += "</data>\n";
 	print(data)
 	
 	f = open(xmlDoc, 'w')

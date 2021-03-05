@@ -1,9 +1,0 @@
-path_to_cam = 
-fps = 25
-path_to_saving_video = /home/user/Desktop/LootersMap/LootersMap_cpp/LootersMap_cpp_linux/build/saved_video/
-path_to_saving_imgs = /home/user/Desktop/LootersMap/LootersMap_cpp/LootersMap_cpp_linux/build/saved_imgs/
-skip_frames_saving = 0
-skip_frames_classify = 0
-stream_descr = 3
-is_show_on_screen = 1
-frames_in_one_avi_file = 25000
