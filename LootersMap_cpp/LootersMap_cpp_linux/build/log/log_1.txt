@@ -1,3 +1,0 @@
-This is /home/user/Desktop/LootersMap/LootersMap_cpp/LootersMap_cpp_linux/build/saved_video/1.avi from cam 
-Try to connect camera ...
-Cannot connect to camera

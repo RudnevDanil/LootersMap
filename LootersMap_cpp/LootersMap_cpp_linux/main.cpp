@@ -1,12 +1,10 @@
 #include <opencv2/highgui.hpp>
-//#include <windows.h>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <thread>
 #include <map>
 #include <ctime>
-
 #include <unistd.h>//linux sleep
 
 using namespace cv;
@@ -18,14 +16,10 @@ string xml_directory = build_directory + "xml/";
 string xml_settings = "settings.xml";//settings_example
 string path_to_saving_video = build_directory + "saved_video/";
 string path_to_saving_imgs = build_directory + "saved_imgs/";
-//string xml_directory = "/home/user/Desktop/LootersMap_last/workpoint/LootersMap_cpp/LootersMap_cpp_linux/build/xml/";
 
-/*string log_directory = "./log/";
-string xml_directory = "./xml/";
-string xml_settings = "settings.xml";
-string path_to_saving_video = "./saved_video/";
-string path_to_saving_imgs = "./saved_imgs/";*/
 map <string, map<string,string>> settings;
+map <string, map<string,string>> settingsNew;
+
 
 // Descriptor class. Use it for give diferent descriptors for each stream.
 class individual_descriptor
@@ -89,7 +83,7 @@ public:
 };
 
 // Reading xml settings file. (!) need to add restarting streams.
-void update_settings(string path, bool is_print_map);
+void update_settings(string path, bool is_print_map, bool isNew = false);
 
 // Capture stream and save imgs and videos.
 int capture_cam(stream_info *info);
@@ -99,19 +93,27 @@ void log(string full_file_path, string message, bool is_cout = false);
 
 int main()
 {
+    // init demons
+    system((string("pkill -f python3")).c_str());
+    sleep(3);
+    system((string("python3 retrain_checker.py &")).c_str());
+    sleep(3);
+    system((string("python3  load_result_to_server.py &")).c_str());
+
     // remove files from log and saved_imgs directories
     system((string("rm -rf ") + log_directory + string("*")).c_str());
     system((string("rm -rf ") + path_to_saving_imgs + string("*")).c_str());
     system((string("rm -rf ") + path_to_saving_video + string("*")).c_str());
 
     // update settings
-    update_settings(xml_directory + xml_settings, true);
+    system((string("python3  load_settings.py")).c_str());
+    update_settings(xml_directory + xml_settings, true, false);
 
     // Capture video
     cout << endl << endl << "capture ..." << endl;  
 
     // make streams
-    individual_descriptor descriptors;
+    /*individual_descriptor descriptors;
     vector<stream_info*> streams_info;
     vector<thread*> threads;
     int numb_streams = stoi(settings["others"]["number_active_streams"]);
@@ -130,21 +132,83 @@ int main()
 
         threads.push_back(new thread(capture_cam, streams_info[i]));
         sleep(5);
-    }
+    }*/
 
-    // waiting threads
-    for(int i = 0; i < numb_streams; i++)
+    while(true)
     {
-        threads[i]->join();
-    }
+        cout << "++++++++++++++" << '\n';
 
+        system((string("python3  load_settings.py")).c_str());
+        update_settings(xml_directory + xml_settings, false, true);
+
+        if(settingsNew.size() != settings.size())
+        {
+            // full reload
+            cout << "full stream" << '\n';
+        }
+        else
+        {
+            for ( const auto &[key, value]: settingsNew )
+            {
+                cout << " --- key = " << key << '\n';
+                if (settings.find(key) == settings.end())
+                {
+                    // reload stream
+                    cout << "reload stream" << '\n';
+                }
+                else
+                {
+                    cout << " --- settingsNew[key].size() = " << settingsNew[key].size() << '\n';
+                    if(settingsNew[key].size() != settings[key].size())
+                    {
+                        // reload stream
+                        cout << "reload stream" << '\n';
+                    }
+                    else
+                    {
+                        string setNew = "";
+                        for ( const auto &[keyI, valueI]: settingsNew[key] )
+                            setNew += keyI + valueI;
+
+                        string setOld = "";
+                        for ( const auto &[keyI, valueI]: settings[key] )
+                            setOld += keyI + valueI;
+
+                        cout << " --- setNew = " << setNew << '\n';
+                        cout << " --- setOld = " << setOld << '\n' << '\n';
+
+                        if(setNew.compare(setOld) != 0)
+                        {
+                            // reload stream
+                            cout << "reload stream" << '\n';
+                        }
+                    }
+                }
+            }
+        }
+
+
+        cout << "++++++++++++++" << '\n';
+
+        // waiting threads
+        /*for(int i = 0; i < numb_streams; i++)
+        {
+            threads[i]->join();
+        }*/
+        sleep(10);
+    }
     return 0;
 }
 
 
-void update_settings(string path, bool is_print_map)
+void update_settings(string path, bool is_print_map, bool isNew)
 {
     cout << "update_settings" << endl << endl;
+
+    if(isNew)
+        settingsNew.clear();
+    else
+        settings.clear();
     ifstream in(path);
     string line;
     bool saving = false;
@@ -200,7 +264,10 @@ void update_settings(string path, bool is_print_map)
                             if(cur_stream_state) // block already opened
                             {
                                 cur_stream_state = false;
-                                settings[cur_stream_name] = cur_stream;
+                                if(isNew)
+                                    settingsNew[cur_stream_name] = cur_stream;
+                                else
+                                    settings[cur_stream_name] = cur_stream;
                                 cur_stream.clear();
                             }
                             else
@@ -227,7 +294,10 @@ void update_settings(string path, bool is_print_map)
                 }
             }
         }
-        settings["others"] = others;
+        if(isNew)
+            settingsNew["others"] = others;
+        else
+            settings["others"] = others;
     }
     else
     {
@@ -241,7 +311,7 @@ void update_settings(string path, bool is_print_map)
 
     if (is_print_map)
     {
-        for (auto elem1 : settings)
+        for (auto elem1 : (isNew ? settingsNew : settings))
         {
             for (auto elem2 : elem1.second)
                 cout << elem1.first << "___" << elem2.first << "___" << elem2.second << endl;
