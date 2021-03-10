@@ -24,13 +24,14 @@ imgs_dir = './saved_imgs/'
 faces_dir = './faces/'
 delete_img_after_classificcation = True
 general_face_counter = 0
-print_bool = True
+#print_bool = True
 while(True):
 	if(os.path.exists(check_file)):
 		files = os.listdir(imgs_dir)
 		if len(files) == 0:
-			print("waiting imgs" + (" / " if print_bool else " \ "), end='\r')
-			print_bool = not print_bool
+			#print("waiting imgs" + (" / " if print_bool else " \ "), end='\r')
+			print(" . ", end='', flush=True)			
+			#print_bool = not print_bool
 			time.sleep(0.5)
 			
 		for filename in files:

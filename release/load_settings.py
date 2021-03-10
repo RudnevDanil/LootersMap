@@ -8,21 +8,21 @@ with open("./auth.json") as json_file:
 	data = json.load(json_file)
 	login = data['login']
 	password = data['pass']
-	print('Login    : ' + data['login'])
-	print('Password : ' + data['pass'])
+	#print('Login    : ' + data['login'])
+	#print('Password : ' + data['pass'])
 	
 # loading data
 url = "http://localhost:8000/php/loadSettingsData.php"
 request = requests.get(url, {'login': login, 'pass': password})
-print("request code = ", request)
+if(request.status_code != 200):
+	print("request code = ", request)
 #print(request.content)
 #print(request.text)
 
 general_counter = 0
 content = json.loads(request.content)
 if(content['answer'] == 'done'):
-	print(content)
-	
+	#print(content)
 	data = "<?xml version='1.0' encoding='UTF-8'?>\n<data>\n";
 	data += "\t<number_active_streams>" + str(len(content['arr'])) + "</number_active_streams>\n"
 	for i in range(0, len(content['arr'])):		
@@ -36,7 +36,7 @@ if(content['answer'] == 'done'):
 		data += "\t<scaling>" + content['arr'][i][6] + "</scaling>\n"
 		data += "\t</stream_" + str(i+1) + ">\n"
 	data += "</data>\n";
-	print(data)
+	#print(data)
 	
 	f = open(xmlDoc, 'w')
 	f.write(data)

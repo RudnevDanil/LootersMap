@@ -1,49 +1,26 @@
 #include <opencv2/highgui.hpp>
-//#include <windows.h>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <thread>
 #include <map>
 #include <ctime>
-
 #include <unistd.h>//linux sleep
 
 using namespace cv;
 using namespace std;
 
-string build_directory = "/home/user/Desktop/LootersMap/LootersMap_cpp/LootersMap_cpp_linux/build/";
+string build_directory = "./";
 string log_directory = build_directory + "log/";
 string xml_directory = build_directory + "xml/";
 string xml_settings = "settings.xml";//settings_example
 string path_to_saving_video = build_directory + "saved_video/";
 string path_to_saving_imgs = build_directory + "saved_imgs/";
-//string xml_directory = "/home/user/Desktop/LootersMap_last/workpoint/LootersMap_cpp/LootersMap_cpp_linux/build/xml/";
 
-/*string log_directory = "./log/";
-string xml_directory = "./xml/";
-string xml_settings = "settings.xml";
-string path_to_saving_video = "./saved_video/";
-string path_to_saving_imgs = "./saved_imgs/";*/
 map <string, map<string,string>> settings;
-
-// Descriptor class. Use it for give diferent descriptors for each stream.
-class individual_descriptor
-{
-private:
-    int next_will_be;
-
-public:
-    individual_descriptor()
-    {
-        next_will_be = 1;
-    }
-
-    int next()
-    {
-        return next_will_be++;
-    }
-};
+map <string, map<string,string>> settingsNew;
+vector<thread*> threads;
+vector<bool> stopStreams;
 
 // Stream info class. Filled by full information about stream.
 class stream_info
@@ -89,7 +66,7 @@ public:
 };
 
 // Reading xml settings file. (!) need to add restarting streams.
-void update_settings(string path, bool is_print_map);
+void update_settings(string path, bool is_print_map, bool isNew = false);
 
 // Capture stream and save imgs and videos.
 int capture_cam(stream_info *info);
@@ -97,61 +74,158 @@ int capture_cam(stream_info *info);
 // log message to a log file and maybe to console
 void log(string full_file_path, string message, bool is_cout = false);
 
+void loadThread(int i)
+{
+    string stream_name = "stream_" + to_string(i+1);
+    stream_info *str_info = new stream_info(
+                                           settings[stream_name]["path_to_cam"],
+                                           stoi(settings[stream_name]["fps"]),
+                                           stoi(settings[stream_name]["skip_frames_saving"]),
+                                           stoi(settings[stream_name]["skip_frames_classify"]),
+                                           path_to_saving_video, path_to_saving_imgs, i+1,
+                                           ((settings[stream_name]["is_show_on_screen"] == "true")?true:false),
+                                            stoi(settings[stream_name]["frames_in_one_avi_file"])
+                                            );
+    thread *th = new thread(capture_cam, str_info);
+    if(i >= threads.size())
+    {
+        stopStreams.push_back(false);
+        threads.push_back(th);
+    }
+    else
+    {
+        stopStreams[i] = false;
+        threads[i] = th;
+    }
+    sleep(5);
+};
+
+void reloadAllStreams()
+{
+    cout << "reload all streams" << '\n';
+
+    // set stop values
+    for(int i = 0; i < stopStreams.size(); i++)
+        stopStreams[i] = true;
+    cout << "waiting streams ... " ;
+    for(int i = 0; i < threads.size(); i++)
+        if(!stopStreams[i])
+            threads[i]->join();
+    cout << "all streams has been stoped" << endl;
+
+    settings = settingsNew;
+    threads.clear();
+    stopStreams.clear();
+    int numb_streams = stoi(settings["others"]["number_active_streams"]);
+    for(int i = 0; i < numb_streams; i++)
+        loadThread(i);
+}
+
+void reloadStream(int i)
+{
+    cout << "reload stream" << "\t" << i << '\n';
+    stopStreams[i] = true;
+    threads[i]->join();
+    string key = "stream_" + to_string(i);
+    settings[key] = settingsNew[key];
+    loadThread(i);
+}
+
+void udateSettings()
+{
+    system((string("python3  load_settings.py")).c_str());
+    update_settings(xml_directory + xml_settings, false, true);
+
+    if(settingsNew.size() != settings.size())
+        reloadAllStreams();
+    else
+    {
+        for ( const auto &[key, value]: settingsNew )
+        {
+            //cout << " --- key = " << key << '\n';
+            if (settings.find(key) == settings.end())
+            {
+                reloadStream(stoi(key.substr(7, key.size() - 7)));
+                return;
+            }
+            else
+            {
+                //cout << " --- settingsNew[key].size() = " << settingsNew[key].size() << '\n';
+                if(settingsNew[key].size() != settings[key].size())
+                {
+                    reloadStream(stoi(key.substr(7, key.size() - 7)));
+                    return;
+                }
+                else
+                {
+                    string setNew = "";
+                    for ( const auto &[keyI, valueI]: settingsNew[key] )
+                        setNew += keyI + " = " +  valueI + "   ";
+
+                    string setOld = "";
+                    for ( const auto &[keyI, valueI]: settings[key] )
+                        setOld += keyI + " = " +  valueI + "   ";
+
+                    if(setNew.compare(setOld) != 0)
+                    {
+                        if(key.find("stream_") != string::npos)
+                        {
+                            reloadStream(stoi(key.substr(7, key.size() - 7)));
+                            return;
+                        }
+                        else
+                            cout << "try to reload stream, but id was not parsed. " << key << endl;
+                    }
+                }
+            }
+        }
+    }
+}
+
 int main()
 {
+    // init demons
+    system((string("pkill -f python3")).c_str());
+    sleep(3);
+    system((string("python3 retrain_checker.py &")).c_str());
+    sleep(3);
+    system((string("python3  load_result_to_server.py &")).c_str());
+
     // remove files from log and saved_imgs directories
     system((string("rm -rf ") + log_directory + string("*")).c_str());
     system((string("rm -rf ") + path_to_saving_imgs + string("*")).c_str());
     system((string("rm -rf ") + path_to_saving_video + string("*")).c_str());
 
     // update settings
-    update_settings(xml_directory + xml_settings, true);
-
-    // Capture video
-    cout << endl << endl << "capture ..." << endl;  
+    system((string("python3  load_settings.py")).c_str());
+    update_settings(xml_directory + xml_settings, false, true);
 
     // make streams
-    individual_descriptor descriptors;
-    vector<stream_info*> streams_info;
-    vector<thread*> threads;
-    int numb_streams = stoi(settings["others"]["number_active_streams"]);
-    for(int i = 0; i < numb_streams; i++)
+    reloadAllStreams();
+
+    while(true)
     {
-        string stream_name = "stream_" + to_string(i+1);
-        streams_info.push_back(new stream_info(
-                                               settings[stream_name]["path_to_cam"],
-                                               stoi(settings[stream_name]["fps"]),
-                                               stoi(settings[stream_name]["skip_frames_saving"]),
-                                               stoi(settings[stream_name]["skip_frames_classify"]),
-                                               path_to_saving_video, path_to_saving_imgs, descriptors.next(),
-                                               ((settings[stream_name]["is_show_on_screen"] == "true")?true:false),
-                                                stoi(settings[stream_name]["frames_in_one_avi_file"])
-                                                ));
-
-        threads.push_back(new thread(capture_cam, streams_info[i]));
-        sleep(5);
+        udateSettings();
+        sleep(1);
     }
-
-    // waiting threads
-    for(int i = 0; i < numb_streams; i++)
-    {
-        threads[i]->join();
-    }
-
     return 0;
 }
 
 
-void update_settings(string path, bool is_print_map)
+void update_settings(string path, bool is_print_map, bool isNew)
 {
-    cout << "update_settings" << endl << endl;
+    //cout << "update_settings" << endl << endl;
+
+    if(isNew)
+        settingsNew.clear();
+    else
+        settings.clear();
     ifstream in(path);
     string line;
     bool saving = false;
 
     if (in.is_open())
     {
-        cout << "..." << endl;
         map<string,string> others;
         map<string,string> cur_stream;
         bool cur_stream_state = false;
@@ -159,21 +233,15 @@ void update_settings(string path, bool is_print_map)
 
         while (getline(in, line))
         {
-
             if (line == "\r")
                 continue;
 
             if (line.find("<data>") != string::npos)
-            {
                 saving = true;
-
-            }
             else
             {
                 if (line.find("</data>") != string::npos)
-                {
                     saving = false;
-                }
                 else
                 {
                     if (saving)
@@ -191,22 +259,21 @@ void update_settings(string path, bool is_print_map)
                                 cur_stream.clear();
                             }
                             else
-                            {
                                 cout << " -- ERROR parsing XML. settings block damaged. start block." << endl;
-                            }
                         }
                         else if(last_l_arrow == 1) // stream block end
                         {
                             if(cur_stream_state) // block already opened
                             {
                                 cur_stream_state = false;
-                                settings[cur_stream_name] = cur_stream;
+                                if(isNew)
+                                    settingsNew[cur_stream_name] = cur_stream;
+                                else
+                                    settings[cur_stream_name] = cur_stream;
                                 cur_stream.clear();
                             }
                             else
-                            {
                                 cout << " -- ERROR parsing XML. settings block damaged. end block." << endl;
-                            }
                         }
                         else
                         {
@@ -227,29 +294,24 @@ void update_settings(string path, bool is_print_map)
                 }
             }
         }
-        settings["others"] = others;
+        if(isNew)
+            settingsNew["others"] = others;
+        else
+            settings["others"] = others;
     }
     else
-    {
         cout << " -- ERROR opening XML. path is " << path << endl;
-    }
     in.close();
     if (saving == true)
-    {
         cout << " -- ERROR parsing XML. not founded end of data block." << endl;
-    }
 
     if (is_print_map)
-    {
-        for (auto elem1 : settings)
+        for (auto elem1 : (isNew ? settingsNew : settings))
         {
             for (auto elem2 : elem1.second)
                 cout << elem1.first << "___" << elem2.first << "___" << elem2.second << endl;
             cout << endl;
         }
-    }
-
-    cout << "update_settings DONE" << endl << endl;
 }
 
 int capture_cam(stream_info *info)
@@ -267,6 +329,7 @@ int capture_cam(stream_info *info)
     {
         log(log_file_full_path, "Cannot connect to camera\n", true);
         getchar();
+        stopStreams[info->stream_descr - 1] = true;
         return -1;
     }
     log(log_file_full_path, "Camera connected!\n", true);
@@ -290,13 +353,14 @@ int capture_cam(stream_info *info)
     if (!oVideoWriter->isOpened())
     {
         log(log_file_full_path, "ERROR: Failed to write the video\n", true);
+        stopStreams[info->stream_descr - 1] = true;
         return -1;
     }
 
     int skiped_frames_saving = 0;
     int skiped_frames_classify = 0;
     int img_counter = 0;
-    while (true)
+    while (!stopStreams[info->stream_descr - 1])
     {
         Mat frame;
 

@@ -1,0 +1,6 @@
+This is ./saved_video/4.avi from cam 
+Try to connect camera ...
+Cannot connect to camera
+This is ./saved_video/4.avi from cam 
+Try to connect camera ...
+Cannot connect to camera

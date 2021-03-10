@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<data>
+	<number_active_streams>4</number_active_streams>
+	<stream_1>
+	<path_to_cam></path_to_cam>
+	<fps>25</fps>
+	<skip_frames_saving>0</skip_frames_saving>
+	<skip_frames_classify>0</skip_frames_classify>
+	<is_show_on_screen>true</is_show_on_screen>
+	<frames_in_one_avi_file>25000</frames_in_one_avi_file>
+	<scaling>1</scaling>
+	</stream_1>
+	<stream_2>
+	<path_to_cam></path_to_cam>
+	<fps>25</fps>
+	<skip_frames_saving>0</skip_frames_saving>
+	<skip_frames_classify>0</skip_frames_classify>
+	<is_show_on_screen>true</is_show_on_screen>
+	<frames_in_one_avi_file>25000</frames_in_one_avi_file>
+	<scaling>1</scaling>
+	</stream_2>
+	<stream_3>
+	<path_to_cam></path_to_cam>
+	<fps>25</fps>
+	<skip_frames_saving>0</skip_frames_saving>
+	<skip_frames_classify>0</skip_frames_classify>
+	<is_show_on_screen>true</is_show_on_screen>
+	<frames_in_one_avi_file>25000</frames_in_one_avi_file>
+	<scaling>1</scaling>
+	</stream_3>
+	<stream_4>
+	<path_to_cam></path_to_cam>
+	<fps>25</fps>
+	<skip_frames_saving>0</skip_frames_saving>
+	<skip_frames_classify>0</skip_frames_classify>
+	<is_show_on_screen>true</is_show_on_screen>
+	<frames_in_one_avi_file>25000</frames_in_one_avi_file>
+	<scaling>1</scaling>
+	</stream_4>
+</data>
