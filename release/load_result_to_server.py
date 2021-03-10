@@ -8,13 +8,12 @@ with open("./auth.json") as json_file:
 	data = json.load(json_file)
 	login = data['login']
 	password = data['pass']
-	print('Login    : ' + data['login'])
-	print('Password : ' + data['pass'])
+	#print('Login    : ' + data['login'])
+	#print('Password : ' + data['pass'])
 	
 faces_dir = './faces/'
 url = "http://localhost:8000/php/saveClassficationResult.php"
 
-print("\n loading to server ...")
 while True:
 	listDirectory = os.listdir(faces_dir)
 	image_paths = [os.path.join(faces_dir, f) for f in listDirectory]

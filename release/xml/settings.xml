@@ -2,7 +2,7 @@
 <data>
 	<number_active_streams>4</number_active_streams>
 	<stream_1>
-	<path_to_cam>conline1</path_to_cam>
+	<path_to_cam></path_to_cam>
 	<fps>25</fps>
 	<skip_frames_saving>0</skip_frames_saving>
 	<skip_frames_classify>0</skip_frames_classify>
@@ -11,7 +11,7 @@
 	<scaling>1</scaling>
 	</stream_1>
 	<stream_2>
-	<path_to_cam>conline2</path_to_cam>
+	<path_to_cam></path_to_cam>
 	<fps>25</fps>
 	<skip_frames_saving>0</skip_frames_saving>
 	<skip_frames_classify>0</skip_frames_classify>
