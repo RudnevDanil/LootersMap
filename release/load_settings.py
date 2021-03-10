@@ -8,8 +8,8 @@ with open("./auth.json") as json_file:
 	data = json.load(json_file)
 	login = data['login']
 	password = data['pass']
-	print('Login    : ' + data['login'])
-	print('Password : ' + data['pass'])
+	#print('Login    : ' + data['login'])
+	#print('Password : ' + data['pass'])
 	
 # loading data
 url = "http://localhost:8000/php/loadSettingsData.php"

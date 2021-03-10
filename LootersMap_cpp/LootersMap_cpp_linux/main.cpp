@@ -10,7 +10,7 @@
 using namespace cv;
 using namespace std;
 
-string build_directory = "/home/user/Desktop/LootersMap/LootersMap_cpp/LootersMap_cpp_linux/build/";
+string build_directory = "./";
 string log_directory = build_directory + "log/";
 string xml_directory = build_directory + "xml/";
 string xml_settings = "settings.xml";//settings_example
@@ -136,7 +136,7 @@ int main()
 
     while(true)
     {
-        cout << "++++++++++++++" << '\n';
+        //cout << "++++++++++++++" << '\n';
 
         system((string("python3  load_settings.py")).c_str());
         update_settings(xml_directory + xml_settings, false, true);
@@ -144,13 +144,13 @@ int main()
         if(settingsNew.size() != settings.size())
         {
             // full reload
-            cout << "full stream" << '\n';
+            cout << "reload all streams" << '\n';
         }
         else
         {
             for ( const auto &[key, value]: settingsNew )
             {
-                cout << " --- key = " << key << '\n';
+                //cout << " --- key = " << key << '\n';
                 if (settings.find(key) == settings.end())
                 {
                     // reload stream
@@ -158,7 +158,7 @@ int main()
                 }
                 else
                 {
-                    cout << " --- settingsNew[key].size() = " << settingsNew[key].size() << '\n';
+                    //cout << " --- settingsNew[key].size() = " << settingsNew[key].size() << '\n';
                     if(settingsNew[key].size() != settings[key].size())
                     {
                         // reload stream
@@ -168,34 +168,36 @@ int main()
                     {
                         string setNew = "";
                         for ( const auto &[keyI, valueI]: settingsNew[key] )
-                            setNew += keyI + valueI;
+                            setNew += keyI + " = " +  valueI + "   ";
 
                         string setOld = "";
                         for ( const auto &[keyI, valueI]: settings[key] )
-                            setOld += keyI + valueI;
+                            setOld += keyI + " = " +  valueI + "   ";
 
-                        cout << " --- setNew = " << setNew << '\n';
-                        cout << " --- setOld = " << setOld << '\n' << '\n';
+                        //cout << " --- setNew = " << setNew << '\n';
+                        //cout << " --- setOld = " << setOld << '\n';
 
                         if(setNew.compare(setOld) != 0)
                         {
                             // reload stream
                             cout << "reload stream" << '\n';
                         }
+
+                        //cout << '\n';
                     }
                 }
             }
         }
 
-
-        cout << "++++++++++++++" << '\n';
+        settings = settingsNew;
+        //cout << "++++++++++++++" << '\n';
 
         // waiting threads
         /*for(int i = 0; i < numb_streams; i++)
         {
             threads[i]->join();
         }*/
-        sleep(10);
+        sleep(1);
     }
     return 0;
 }
@@ -203,7 +205,7 @@ int main()
 
 void update_settings(string path, bool is_print_map, bool isNew)
 {
-    cout << "update_settings" << endl << endl;
+    //cout << "update_settings" << endl << endl;
 
     if(isNew)
         settingsNew.clear();
@@ -215,7 +217,7 @@ void update_settings(string path, bool is_print_map, bool isNew)
 
     if (in.is_open())
     {
-        cout << "..." << endl;
+        //cout << "..." << endl;
         map<string,string> others;
         map<string,string> cur_stream;
         bool cur_stream_state = false;
@@ -319,7 +321,7 @@ void update_settings(string path, bool is_print_map, bool isNew)
         }
     }
 
-    cout << "update_settings DONE" << endl << endl;
+    //cout << "update_settings DONE" << endl << endl;
 }
 
 int capture_cam(stream_info *info)
