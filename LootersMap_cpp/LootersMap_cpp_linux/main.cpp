@@ -339,7 +339,7 @@ int capture_cam(stream_info *info)
     resizeWindow(full_path_for_saving_video, window_size, window_size);
     moveWindow(full_path_for_saving_video, (info->stream_descr - 1) * ((int)(window_size*1.3)), 0);
 
-    Size frameSize(static_cast<int>(cap.get(CV_CAP_PROP_FRAME_WIDTH)), static_cast<int>(cap.get(CV_CAP_PROP_FRAME_HEIGHT)));
+    Size frameSize(static_cast<int>(cap.get(CAP_PROP_FRAME_WIDTH)), static_cast<int>(cap.get(CAP_PROP_FRAME_HEIGHT)));
 
     int avi_file_counter = 0;
     int frames_recorded = 0;
@@ -348,7 +348,7 @@ int capture_cam(stream_info *info)
     struct tm *now = localtime(&st_recording_date);
     string date_formated = to_string(now->tm_year + 1900) + "_" + to_string(now->tm_mon + 1) + "_" + to_string(now->tm_mday) + "__" + to_string(now->tm_hour) + ":" + to_string(now->tm_min) + ":" + to_string(now->tm_sec);
     curent_avi_path.insert(full_path_for_saving_video.length()-4,"__" + date_formated + "__" + to_string(avi_file_counter));
-    VideoWriter *oVideoWriter = new VideoWriter(curent_avi_path, CV_FOURCC('P', 'I', 'M', '1'), info->fps, frameSize, true);
+    VideoWriter *oVideoWriter = new VideoWriter(curent_avi_path, VideoWriter::fourcc('P', 'I', 'M', '1'), info->fps, frameSize, true);
 
     if (!oVideoWriter->isOpened())
     {
@@ -360,6 +360,8 @@ int capture_cam(stream_info *info)
     int skiped_frames_saving = 0;
     int skiped_frames_classify = 0;
     int img_counter = 0;
+    cout << "debug --- while started ..." << endl;
+    /*
     while (!stopStreams[info->stream_descr - 1])
     {
         Mat frame;
@@ -382,7 +384,7 @@ int capture_cam(stream_info *info)
                 now = localtime(&st_recording_date);
                 string date_formated = to_string(now->tm_year + 1900) + "_" + to_string(now->tm_mon + 1) + "_" + to_string(now->tm_mday) + "__" + to_string(now->tm_hour) + ":" + to_string(now->tm_min) + ":" + to_string(now->tm_sec);
                 curent_avi_path.insert(full_path_for_saving_video.length()-4,"__" + date_formated + "__" + to_string(++avi_file_counter));
-                oVideoWriter = new VideoWriter(curent_avi_path, CV_FOURCC('P', 'I', 'M', '1'), info->fps, frameSize, true);
+                oVideoWriter = new VideoWriter(curent_avi_path, VideoWriter::fourcc('P', 'I', 'M', '1'), info->fps, frameSize, true);
                 frames_recorded = 0;
             }
             oVideoWriter->write(frame); //writer the frame into the file
@@ -407,6 +409,7 @@ int capture_cam(stream_info *info)
             break;
         }
     }
+    */
     return 0;
 }
 

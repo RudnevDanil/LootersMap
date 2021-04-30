@@ -1,8 +1,6 @@
 from PIL import Image
 import os, requests, json
 
-train_data_path = "./train_data/"
-
 # loading user login and password
 with open("./auth.json") as json_file:
 	data = json.load(json_file)

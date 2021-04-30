@@ -3,7 +3,9 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
-LIBS += `pkg-config opencv --libs`
+INCLUDEPATH += /usr/local/include/opencv4
+
+LIBS += `pkg-config opencv4 --libs`
 QMAKE_LFLAGS += -pthread
 
 SOURCES += main.cpp
