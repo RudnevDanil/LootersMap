@@ -12,8 +12,11 @@ with open("./auth.json") as json_file:
 	#print('Password : ' + data['pass'])
 	
 # loading data
-url = "http://localhost:8000/php/loadSettingsData.php"
-request = requests.get(url, {'login': login, 'pass': password})
+headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+#url = "http://localhost:8000/php/loadSettingsData.php"
+url = "http://h96046yr.beget.tech/lm/php/loadSettingsData.php"
+
+request = requests.get(url, {'login': login, 'pass': password, headers=headers})
 if(request.status_code != 200):
 	print("request code = ", request)
 #print(request.content)
