@@ -1,98 +1,43 @@
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-import time, requests, insightface
+import cv2, os, shutil, time
 import numpy as np
-from PIL import Image
-from scipy.spatial.distance import cosine
-from mtcnn import MTCNN
 
-detector = MTCNN()
-model = insightface.app.FaceAnalysis()
-model.prepare(ctx_id = -1, nms=0.4)
-
-encod_path = './data_encod.npy'
-ids__path = './data_ids.npy'
-
-print(" Load a trained data...")
-known_face_encodings = np.load(encod_path)
-known_face_ids = np.load(ids__path)
-print(" Using dataset on %d images" % len(known_face_encodings))
-
-check_file = "./isClassify"
+video_dir = './video_for_classification/'
 imgs_dir = './saved_imgs/'
-faces_dir = './faces/'
-delete_img_after_classificcation = True
-general_face_counter = 0
-#print_bool = True
+done_video_dir = video_dir + 'done/'
+
+if not os.path.exists(done_video_dir):
+	os.mkdir(done_video_dir)
+
 while(True):
-	if(os.path.exists(check_file)):
-		files = os.listdir(imgs_dir)
-		if len(files) == 0:
-			#print("waiting imgs" + (" / " if print_bool else " \ "), end='\r')
-			print(" . ", end='', flush=True)			
-			#print_bool = not print_bool
-			time.sleep(0.5)
+	counetr_files = 0
+	files = os.listdir(video_dir)
+	
+	for filename in files:
+		if not os.path.isdir(video_dir + filename):
+			print(" --- working with file named " + video_dir + filename)
+			counetr_files += 1
 			
-		for filename in files:
-			timer_start = time.time()
+			cap = cv2.VideoCapture(video_dir + filename)
 			
-			indexCamCode = filename.find('_')
-			if indexCamCode == -1:
-				print(" --- filename error ---")
-			else:
-				indexCamCode = filename[:indexCamCode]
-			print(" --- working with file named " + filename + " ... from camera " + indexCamCode)
-			boxes = []	
-
-			frame = np.array(Image.open(imgs_dir + filename),'uint8')
-			image = frame
-
-			result = detector.detect_faces(image)	
-			for cur_result in result:
-				box_i = len(boxes)
-				bounding_box = cur_result['box']
-				left = bounding_box[0]
-				top = bounding_box[1]
-				right = bounding_box[0]+bounding_box[2]
-				bottom = bounding_box[1] + bounding_box[3]
-
-				color = (0,155,255)
+			if not cap.isOpened(): 
+				print(" --- ERROR --- could not open :" + fn)
+				break
 				
-				border_h = (int)((bottom - top)*0.40)
-				border_w = (int)((right - left)*0.40)
-				if (top - border_h >=0) and (bottom + border_h < 960) and (left - border_w >= 0) and (right + border_w < 1280):			
-					faces = model.get(frame[top-border_h:bottom+border_h,left-border_w:right+border_w])
-					print(" --- founded " + str(len(faces)) + " faces")
-					for face in faces:	
-										
-						min_ind, min_val = -1 , 1.1
-						tolerance = 0.6
-						for i in range(0,len(known_face_encodings)):
-							byf = cosine(face.normed_embedding, known_face_encodings[i])
-							if byf < min_val:
-								min_val = byf
-								min_ind = i
-						
-						answer = known_face_ids[min_ind] if (min_ind != -1) and (min_val < tolerance) else -1
-
-						boxes.append([])
-						boxes[box_i].append(left-border_w)
-						boxes[box_i].append(top-border_h)
-						boxes[box_i].append(right+border_w)
-						boxes[box_i].append(bottom+border_h)
-						boxes[box_i].append(answer)
-
-			for i in range(len(boxes)):
-				img = Image.fromarray(np.uint8(frame[boxes[i][1]:boxes[i][3],boxes[i][0]:boxes[i][2]])).convert('RGB')
-				img.save(faces_dir + "f" + str(general_face_counter) + "_" + str(boxes[i][4]) + "_" + indexCamCode + ".png", "PNG")
-				general_face_counter += 1
-				
-			# delete this file
-			if delete_img_after_classificcation:
-				os.remove(imgs_dir + filename)
-		
-			timer_end = time.time()
-			print("elapsed time is " + str(timer_end - timer_start) + "\n")
-	else:
-		time.sleep(1)
+			success, image = cap.read()
+			fr_counter = 0
+			saving_counter = 0
+			while success:
+				if(fr_counter % 25 == 0): # how much frames to skip
+					cv2.imwrite(imgs_dir + "video_" + filename + "__frame_%d.jpg" % saving_counter, image)  
+					saving_counter += 1
+					print(' + ', end='') if success else  print(' - ', end='')
+					if(saving_counter % 25 == 0): # just for printing
+						print(' / %d min. %d sec.done' % (saving_counter // 60 , saving_counter % 60))
+				success, image = cap.read()
+				fr_counter += 1
+			
+			shutil.move(video_dir + filename, done_video_dir)
+			
+	if counetr_files == 0:
+		print(" . ", end='', flush=True)
+		time.sleep(0.5)
