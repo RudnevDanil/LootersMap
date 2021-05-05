@@ -25,7 +25,7 @@ headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleW
 #url = "http://localhost:8000/php/loadTrainImgs.php"
 url = "http://h96046yr.beget.tech/lm/php/loadTrainImgs.php"
 
-request = requests.get(url, {'login': login, 'pass': password, headers=headers})
+request = requests.get(url, {'login': login, 'pass': password}, headers=headers)
 if(request.status_code != 200):
 	print("request code = ", request)
 #print(request.content)

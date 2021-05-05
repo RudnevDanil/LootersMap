@@ -29,7 +29,7 @@ headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleW
 url = "http://h96046yr.beget.tech/lm/php/loadTrainImgs.php"
 
 while(True):
-	request = requests.get(url, {'login': login, 'pass': password, 'idsOnly': 'true', headers=headers})
+	request = requests.get(url, {'login': login, 'pass': password, 'idsOnly': 'true'}, headers=headers)
 	if(request.status_code != 200):
 		print("request code = ", request)	
 	content = json.loads(request.content)
